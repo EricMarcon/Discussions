@@ -6,4 +6,3 @@ Notes sur des sujets divers, pour mémoire.
 - [Qualité d'ajustement multinomial](gof_multinomial.html)
 - [p-hacking](p-hacking.html)
 - [Récupération de la richesse des forêts secondaires](recuperation_secondaire.html)
-- [Régression de modèle II](regression_modele_II.html)
