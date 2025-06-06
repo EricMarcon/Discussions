@@ -1,0 +1,114 @@
+---
+title: "Croissance"
+format: 
+  html:
+    toc: true
+editor: visual
+lang: fr-FR
+bibliography: references.bib
+---
+
+## Modèle
+
+Les paramètres du modèle de croissance dans @Herault2011 sont typiquement les suivants:
+
+```{r}
+Max <- log(2) # log(cm)
+Dopt <- 30    # cm
+K <- 0.8
+```
+
+La fonction de croissance est
+
+```{r}
+log_croissance_plus_un <- function(d) {
+  return(Max * exp(-1 / 2 * (log(d / Dopt) / K)^2))
+}
+```
+
+Le paramètre $K$ n'est pas dans le logarimthme comme dans l'article, sinon la croissance optimale ne correspond pas à $d = Dopt$.
+L'équation correcte est en [annexe 3](https://besjournals.onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1111%2Fj.1365-2745.2011.01883.x&file=JEC_1883_sm_appendixS1-S4_Rev.pdf) de l'article.
+
+@canham2004 ont écrit un modèle log-normal pour la croissance mais dans @Herault2011 c'est le log de la croissance qui est décrit.
+Si le modèle était encore celui de Canham, il ne devrait pas y avoir de log dans l'exponentielle : la densité devrait être de la forme d'une loi normale.
+Le modèle n'est donc pas "presque une densité de loi log-normale", mais doit plutôt être considéré comme une forme ad-hoc qui décrit bien l'ontogénie.
+
+La courbe est:
+
+```{r}
+curve(log_croissance_plus_un, from = 10, to = 80)
+```
+
+C'est ennuyeux parce qu'on comprend mieux intuitivement que la croissance (pas son logarithme) est modulée par le diamètre selon la courbe précédente.
+Mais en réalité, le modèle se comporte presque comme si la croissance (et non son logarithme) était utilisée comme variable de sortie:
+
+```{r}
+croissance <- function(x) exp(log_croissance_plus_un(x)) - 1
+curve(croissance, from = 10, to = 80)
+```
+
+L'explication est que la relation entre la croissance et son logarithme (de la croissance +1), pour chaque valeur de diamètre, est presque proportionnelle :
+
+```{r}
+# Croissance selon le modèle entre 1 et 80 cm
+diameters <- 1:80
+log_croissance_seq <- sapply(diameters, log_croissance_plus_un)
+croissance_seq <-  sapply(diameters, croissance)
+plot(croissance_seq ~ log_croissance_seq)
+lm_croissance <- lm(croissance_seq ~ log_croissance_seq + 0)
+abline(b = lm_croissance$coefficients[1], a = 0,  col = "red")
+```
+
+On peut donc indifféremment modéliser la croissance (Canham) ou le logarithme de la croissance +1 (Hérault) comme une valeur maximale multipliée par le facteur de taille contenu dans l'exponentielle sans changer les résultats, à une constante multiplicative près, qui se confond avec le choix des unités.
+
+## Autres ajustements possibles
+
+Peut-on remplacer ce modèle par un modèle polynomial ?
+
+```{r}
+# Diamètre au carré et au cube
+diameters_squared <- diameters^2
+diameters_3 <- diameters^3
+```
+
+### Modèle alternatif $d$ et $d^2$
+
+```{r}
+lm_alt2 <- lm(log_croissance_seq ~ diameters + diameters_squared)
+summary(lm_alt2)
+```
+
+### Modèle alternatif de degré 3
+
+```{r}
+lm_alt3 <- lm(log_croissance_seq ~ diameters + diameters_squared + diameters_3)
+summary(lm_alt3)
+```
+
+### Comparaison des ajustements
+
+Figure avec la courbe et les prévisions des modèles polynomiaux de degrés 2 et 3:
+
+```{r}
+curve(log_croissance_plus_un, from = 10, to = 80)
+
+# Degré 2
+fit2 <- 
+  lm_alt2$coefficients[1] + 
+  lm_alt2$coefficients[2] * diameters + 
+  lm_alt2$coefficients[3] * diameters_squared 
+# Points verts
+points(y = fit2, x = diameters, col = "green")
+
+# Degré 3
+fit3 <- 
+  lm_alt3$coefficients[1] + 
+  lm_alt3$coefficients[2] * diameters + 
+  lm_alt3$coefficients[3] * diameters_squared +
+  lm_alt3$coefficients[4] * diameters_3
+# Points rouges
+points(y = fit3, x = diameters, col = "red")
+```
+
+Le polynôme de degré 2 est forcément symétrique et concave, donc on perd les caractéristiques du modèle (asymétrie et kurtosis).
+Le polynôme de degré 3 a ces propriétés mais la croissance augmente à nouveau aux diamètres extrêmes.

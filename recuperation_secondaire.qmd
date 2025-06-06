@@ -1,0 +1,54 @@
+---
+title: "Richesse des forêts secondaires"
+format: 
+  html:
+    toc: true
+editor: visual
+lang: fr-FR
+bibliography: references.bib
+---
+
+## Argument
+
+La récupération des propriétés écologiques des forêts secondaires est rapide selon @poorter2021.
+Un argument est que la richesse spécifique revient rapidement à un niveau proche de sa référence.
+
+Le problème est que la richesse est mesurée sur de petites placettes, typiquement de 0,1 ha, correspondant grossièrement à 60 arbres.
+A ce niveau d'échantillonnage, seules les espèces très abondantes sont observées: les espèces plus rares, qui constituent la majorité de la richesse, ne sont pas prises en compte
+
+## Exemple
+
+La communauté pré-exploitation est supposée log-normale, avec 300 espèces.
+La communauté de la forêt secondaire, post-exploitation et récupération, est au choix géométrique ou lognormale, mais avec 100 espèces seulement.
+
+```{r}
+library("entropart")
+# Pré-exploitation
+pre <- rCommunity(1, size = 1E6, S = 300, Distribution = "lnorm")
+autoplot(pre)
+# Geométrique
+post_geom <- rCommunity(1, size = 1E6, S = 100, Distribution = "geom", prob = .01)
+autoplot(post_geom)
+# Lognormale pauvre
+post_lnorm <- rCommunity(1, size = 1E6, S = 100, Distribution = "lnorm", sd = .1)
+autoplot(post_lnorm)
+
+```
+
+La richesse est estimé pour 60 arbres et le taux de récupération est estimé.
+
+```{r}
+level = 60
+# Avant exploitation
+(richness_pre <- Richness(pre, Level = level))
+# Après, géométrique
+(richness_post_geom <- Richness(post_geom, Level = level))
+# Récupération
+(recovery <- richness_post_geom / richness_pre)
+# Après, log-normale
+(richness_post_lnorm <- Richness(post_lnorm, Level = level))
+# Récupération
+(recovery <- richness_post_lnorm / richness_pre)
+```
+
+Dans les deux cas, 90% de la richesse spécifique est récupérée à l'échelle de 0.1 ha alors que la communauté complète comporte trois fois moins d'espèces.
