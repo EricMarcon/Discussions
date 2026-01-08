@@ -73,7 +73,7 @@ knitr::opts_chunk$set(
   # Messages from packages
   message = FALSE,
   # Code chunk automatic format if tidy is TRUE
-  tidy = TRUE, 
+  tidy = FALSE, 
   # Tidy code options: remove blank lines and cut lines after 50 characters
   tidy.opts = list(blank = FALSE, width.cutoff = 50),
   # Font size in PDF output
